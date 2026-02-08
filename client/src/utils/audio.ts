@@ -35,9 +35,19 @@ class AudioManager {
         return this.isMuted;
     }
 
+    public async resume() {
+        if (!this.isInitialized) this.init();
+        if (this.context?.state === 'suspended') {
+            await this.context.resume();
+            console.log("Audio Context Resumed");
+        }
+    }
+
     // Helper to generic synth sounds
     private playOscillator(type: OscillatorType, freq: number, duration: number, startTime: number = 0, vol: number = 1) {
-        if (this.isMuted || !this.context || !this.masterGain) {
+        if (this.isMuted) return;
+
+        if (!this.context || !this.masterGain) {
             if (!this.isInitialized) this.init(); // Try to init if not ready
             if (!this.context) return; // Still failed? abort
         }
@@ -46,20 +56,24 @@ class AudioManager {
             this.context.resume();
         }
 
-        const osc = this.context!.createOscillator();
-        const gain = this.context!.createGain();
+        try {
+            const osc = this.context!.createOscillator();
+            const gain = this.context!.createGain();
 
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.context!.currentTime + startTime);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.context!.currentTime + startTime);
 
-        gain.gain.setValueAtTime(vol, this.context!.currentTime + startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.context!.currentTime + startTime + duration);
+            gain.gain.setValueAtTime(vol, this.context!.currentTime + startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.context!.currentTime + startTime + duration);
 
-        osc.connect(gain);
-        gain.connect(this.masterGain!);
+            osc.connect(gain);
+            gain.connect(this.masterGain!);
 
-        osc.start(this.context!.currentTime + startTime);
-        osc.stop(this.context!.currentTime + startTime + duration);
+            osc.start(this.context!.currentTime + startTime);
+            osc.stop(this.context!.currentTime + startTime + duration);
+        } catch (e) {
+            console.error("Error playing sound:", e);
+        }
     }
 
     // --- Sound Effects ---

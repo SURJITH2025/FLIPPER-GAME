@@ -10,9 +10,25 @@ import GameOverScreen from './components/GameOverScreen';
 import UsernameSetup from './components/UsernameSetup';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './supabase';
+import { audioManager } from './utils/audio';
 
 const GameContainer: React.FC = () => {
   const { gameStatus } = useGame();
+
+  // Unlock Audio on first interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      audioManager.resume();
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
   const { user, loading } = useAuth();
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);

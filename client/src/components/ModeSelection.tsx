@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Brain, Clock, Heart, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
 import Leaderboard from './Leaderboard';
+import { audioManager } from '../utils/audio';
 
 const ModeCard: React.FC<{
     icon: React.ReactNode;
@@ -52,68 +53,78 @@ const ModeCard: React.FC<{
 };
 
 const ModeSelection: React.FC = () => {
-    const { startGame } = useGame();
+    const { startGame, quitGame } = useGame();
     const { signOut } = useAuth();
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] w-full max-w-5xl mx-auto p-4 relative">
-            {/* Logout Button */}
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={signOut}
-                className="fixed top-4 right-4 p-3 rounded-full bg-red-500/10 border border-red-500/50 text-red-500 hover:bg-red-500/20 transition-colors z-[100] cursor-pointer"
-                title="Disconnect from System"
-            >
-                <LogOut size={24} />
-            </motion.button>
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-12 mt-12"
-            >
-                <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink mb-4 drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
-                    MEMORY FLIP
-                </h1>
-                <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                    Engage your cognitive core. Select a protocol to begin synchronization.
-                </p>
-            </motion.div>
+            <div className="relative z-10 w-full max-w-4xl p-8">
+                <div className="flex justify-between items-center mb-12">
+                    <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
+                        MEMORY_FLIP
+                    </h1>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                audioManager.resume();
+                                audioManager.playMatch();
+                                alert("Audio Test: Playing Match Sound");
+                            }}
+                            className="p-2 border border-neon-blue/30 rounded-lg text-neon-blue hover:bg-neon-blue/10 transition-colors"
+                            title="Test Audio"
+                        >
+                            🔊
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (window.confirm("Are you sure you want to logout?")) {
+                                    signOut();
+                                    quitGame();
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors font-orbitron text-sm tracking-widest"
+                        >
+                            <LogOut size={16} />
+                            LOGOUT
+                        </button>
+                    </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12">
-                <ModeCard
-                    icon={<Brain size={32} />}
-                    title="Classic"
-                    description="Pure memory challenge. Unlimited moves. 8 progressive levels."
-                    color="blue"
-                    onClick={() => startGame('classic')}
-                />
-                <ModeCard
-                    icon={<Clock size={32} />}
-                    title="Move Limit"
-                    description="Efficiency is key. Finite moves per level. Exhaustion leads to failure."
-                    color="purple"
-                    onClick={() => startGame('time_limit')}
-                />
-                <ModeCard
-                    icon={<Heart size={32} />}
-                    title="Survival"
-                    description="High stakes. Limited lives. Mismatches are penalized. Survive to the end."
-                    color="pink"
-                    onClick={() => startGame('lives')}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12">
+                    <ModeCard
+                        icon={<Brain size={32} />}
+                        title="Classic"
+                        description="Pure memory challenge. Unlimited moves. 8 progressive levels."
+                        color="blue"
+                        onClick={() => startGame('classic')}
+                    />
+                    <ModeCard
+                        icon={<Clock size={32} />}
+                        title="Move Limit"
+                        description="Efficiency is key. Finite moves per level. Exhaustion leads to failure."
+                        color="purple"
+                        onClick={() => startGame('time_limit')}
+                    />
+                    <ModeCard
+                        icon={<Heart size={32} />}
+                        title="Survival"
+                        description="High stakes. Limited lives. Mismatches are penalized. Survive to the end."
+                        color="pink"
+                        onClick={() => startGame('lives')}
+                    />
+                </div>
+
+                {/* Leaderboard Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="w-full"
+                >
+                    <Leaderboard />
+                </motion.div>
             </div>
-
-            {/* Leaderboard Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="w-full"
-            >
-                <Leaderboard />
-            </motion.div>
         </div>
     );
 };
