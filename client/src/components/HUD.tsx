@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { Heart, Hash, Trophy, Timer } from 'lucide-react';
+import { Heart, Hash, Trophy, Timer, Volume2, VolumeX } from 'lucide-react';
+import { audioManager } from '../utils/audio';
 
 const HUD: React.FC = () => {
     const { score, level, lives, maxLives, moves, maxMoves, mode, endGame } = useGame();
+    const [isMuted, setIsMuted] = useState(audioManager.getMutedState());
 
     return (
         <div className="w-full max-w-6xl mx-auto p-4 mb-4 glass rounded-xl border border-white/10 flex justify-between items-center text-white bg-dark-bg/50 backdrop-blur-md sticky top-0 z-50 shadow-neon-blue/20 shadow-lg">
@@ -67,6 +69,17 @@ const HUD: React.FC = () => {
                         {score.toLocaleString()}
                     </span>
                 </div>
+
+                <button
+                    onClick={() => {
+                        setIsMuted(audioManager.toggleMute());
+                        audioManager.playClick();
+                    }}
+                    className="p-2 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-colors mr-2"
+                    title={isMuted ? "Unmute Audio" : "Mute Audio"}
+                >
+                    {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </button>
 
                 <button
                     onClick={endGame}

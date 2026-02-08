@@ -7,6 +7,12 @@ export const saveScore = async (userId: string, score: number, mode: GameMode, l
         return;
     }
 
+    // Skip saving score for guest users (mock IDs)
+    if (userId.startsWith('guest-')) {
+        console.log("Guest score not saved to database (local session).");
+        return;
+    }
+
     try {
         const { error } = await supabase.from('scores').insert([
             {

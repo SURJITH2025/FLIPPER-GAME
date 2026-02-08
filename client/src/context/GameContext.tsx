@@ -3,6 +3,7 @@ import type { Card, GameMode, GameState, LevelConfig } from '../types';
 import { generateDeck, getLevelConfig } from '../utils/gameUtils';
 import { supabase } from '../supabase';
 import { saveScore } from '../utils/scoreUtils';
+import { audioManager } from '../utils/audio';
 
 interface GameContextType extends GameState {
     startGame: (mode: GameMode) => void;
@@ -207,6 +208,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const index = state.cards.findIndex(c => c.id === cardId);
         if (index === -1) return;
 
+        // Sound Output
+        audioManager.playFlip();
+
         // Log for debugging
         console.log(`Flipping card at index ${index} (ID: ${cardId})`);
 
@@ -215,7 +219,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         if (state.flippedIndices.length === 2) {
+            const [idx1, idx2] = state.flippedIndices;
+            const card1 = state.cards[idx1];
+            const card2 = state.cards[idx2];
+            const isMatch = card1.symbol === card2.symbol;
+
             const timer = setTimeout(() => {
+                if (isMatch) {
+                    audioManager.playMatch();
+                } else {
+                    audioManager.playMismatch();
+                }
                 dispatch({ type: 'CHECK_MATCH' });
             }, 1000);
             return () => clearTimeout(timer);
@@ -249,6 +263,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check for level complete
         if (state.cards.length > 0 && state.matchedPairs.length === state.cards.length && state.gameStatus === 'playing') {
 
+            audioManager.playLevelComplete();
+
             // SAVE SCORE ON LEVEL COMPLETE
             const saveCurrentScore = async () => {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -260,11 +276,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // All matched
             if (state.level >= 8) { // Max level 8
-                // Game Won Logic here
-                // Maybe dispatch GAME_WIN or just let it sit?
-                // For now, let's just save and maybe stop?
-                // Or loop?
-                // Requirements unclear, but saving is key.
+                // Game Won Logic
             } else {
                 // Auto advance after short delay
                 const timer = setTimeout(() => {
@@ -274,6 +286,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
     }, [state.matchedPairs.length, state.cards.length, state.level, state.gameStatus, nextLevel, state.score, state.mode]);
+
+    // Check for Game Over (Lives/Moves)
+    useEffect(() => {
+        if (state.gameStatus === 'lost') {
+            audioManager.playGameOver();
+        }
+    }, [state.gameStatus]);
 
     const quitGame = () => dispatch({ type: 'QUIT' });
 

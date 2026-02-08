@@ -18,6 +18,12 @@ const UsernameSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
         setError(null);
 
         try {
+            // Skip profile creation for guest users (local mock IDs)
+            if (user.id.startsWith('guest-')) {
+                onComplete();
+                return;
+            }
+
             const { error: insertError } = await supabase
                 .from('profiles')
                 .insert([{ id: user.id, username: username.trim() }]);
