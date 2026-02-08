@@ -1,0 +1,131 @@
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../supabase';
+import { Trophy, Medal, User as UserIcon } from 'lucide-react';
+import { clsx } from 'clsx';
+import type { GameMode } from '../types';
+
+interface ScoreEntry {
+    id: string;
+    username: string;
+    score: number;
+    mode: GameMode;
+    created_at: string;
+    profiles?: {
+        username: string;
+    }
+}
+
+const Leaderboard: React.FC<{ initialMode?: GameMode }> = ({ initialMode = 'classic' }) => {
+    const [currentMode, setCurrentMode] = useState<GameMode>(initialMode);
+    const [scores, setScores] = useState<ScoreEntry[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchScores();
+    }, [currentMode]);
+
+    const fetchScores = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('scores')
+                .select(`
+                    *,
+                    profiles (username)
+                `)
+                .eq('mode', currentMode)
+                .order('score', { ascending: false })
+                .limit(10);
+
+            if (error) {
+                // Mock data if table doesn't exist or error
+                console.warn("Error fetching scores, using mock data:", error.message);
+                setScores(getMockScores(currentMode));
+            } else {
+                setScores(data || []);
+            }
+        } catch (e) {
+            setScores(getMockScores(currentMode));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getMockScores = (m: GameMode): ScoreEntry[] => {
+        return Array.from({ length: 10 }).map((_, i) => ({
+            id: `mock-${i}`,
+            username: `Player_${Math.floor(Math.random() * 1000)}`,
+            score: Math.floor(10000 / (i + 1)),
+            mode: m,
+            created_at: new Date().toISOString()
+        }));
+    };
+
+    return (
+        <div className="bg-dark-bg/80 backdrop-blur-md rounded-2xl border border-white/10 p-6 w-full max-w-2xl mx-auto shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+                <Trophy className="text-neon-blue" size={24} />
+                <h3 className="text-2xl font-orbitron font-bold text-white">GLOBAL_RANKINGS</h3>
+            </div>
+
+            <div className="flex gap-2 mb-6 bg-black/40 p-1 rounded-lg">
+                {(['classic', 'time_limit', 'lives'] as GameMode[]).map((m) => (
+                    <button
+                        key={m}
+                        onClick={() => setCurrentMode(m)}
+                        className={clsx(
+                            "flex-1 py-2 px-3 rounded-md text-sm font-bold transition-all uppercase",
+                            currentMode === m ? "bg-neon-blue text-black shadow-[0_0_10px_rgba(0,243,255,0.5)]" : "text-gray-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        {m === 'time_limit' ? 'MOVE LIMIT' : m}
+                    </button>
+                ))}
+            </div>
+
+            <div className="space-y-2">
+                {loading ? (
+                    <div className="text-center text-gray-500 py-10">SYNCING_DATABASE...</div>
+                ) : (
+                    scores.map((entry, index) => (
+                        <div
+                            key={entry.id}
+                            className={clsx(
+                                "flex items-center justify-between p-3 rounded-lg border border-white/5 transition-colors",
+                                {
+                                    'bg-yellow-500/10 border-yellow-500/50': index === 0,
+                                    'bg-gray-400/10 border-gray-400/50': index === 1,
+                                    'bg-orange-700/10 border-orange-700/50': index === 2,
+                                    'bg-white/5 hover:bg-white/10': index > 2
+                                }
+                            )}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className={clsx(
+                                    "w-8 h-8 flex items-center justify-center font-bold rounded-full",
+                                    {
+                                        'text-yellow-500': index === 0,
+                                        'text-gray-400': index === 1,
+                                        'text-orange-500': index === 2,
+                                        'text-gray-600': index > 2
+                                    }
+                                )}>
+                                    {index < 3 ? <Medal size={20} /> : <span>#{index + 1}</span>}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <UserIcon size={16} className="text-gray-500" />
+                                    <span className="text-white font-mono">
+                                        {entry.profiles?.username || entry.username || 'Unknown_Operative'}
+                                    </span>
+                                </div>
+                            </div>
+                            <span className="text-neon-blue font-bold font-orbitron">{entry.score.toLocaleString()}</span>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default Leaderboard;
