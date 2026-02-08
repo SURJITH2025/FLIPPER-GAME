@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { Heart, Hash, Trophy, Timer } from 'lucide-react';
 
 const HUD: React.FC = () => {
-    const { score, level, lives, maxLives, moves, maxMoves, mode, gameStatus, endGame } = useGame();
+    const { score, level, lives, maxLives, moves, maxMoves, mode, endGame } = useGame();
 
     return (
         <div className="w-full max-w-6xl mx-auto p-4 mb-4 glass rounded-xl border border-white/10 flex justify-between items-center text-white bg-dark-bg/50 backdrop-blur-md sticky top-0 z-50 shadow-neon-blue/20 shadow-lg">

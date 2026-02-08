@@ -1,8 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Card as CardType } from '../types';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 
 interface CardProps {
     card: CardType;

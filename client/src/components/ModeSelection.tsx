@@ -1,20 +1,18 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../hooks/useAuth';
-import type { GameMode } from '../types';
 import { motion } from 'framer-motion';
 import { Brain, Clock, Heart, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
 import Leaderboard from './Leaderboard';
 
 const ModeCard: React.FC<{
-    mode: GameMode;
     icon: React.ReactNode;
     title: string;
     description: string;
     color: string;
     onClick: () => void;
-}> = ({ mode, icon, title, description, color, onClick }) => {
+}> = ({ icon, title, description, color, onClick }) => {
     return (
         <motion.button
             whileHover={{ scale: 1.05, y: -5 }}
@@ -85,7 +83,6 @@ const ModeSelection: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12">
                 <ModeCard
-                    mode="classic"
                     icon={<Brain size={32} />}
                     title="Classic"
                     description="Pure memory challenge. Unlimited moves. 8 progressive levels."
@@ -93,7 +90,6 @@ const ModeSelection: React.FC = () => {
                     onClick={() => startGame('classic')}
                 />
                 <ModeCard
-                    mode="time_limit"
                     icon={<Clock size={32} />}
                     title="Move Limit"
                     description="Efficiency is key. Finite moves per level. Exhaustion leads to failure."
@@ -101,7 +97,6 @@ const ModeSelection: React.FC = () => {
                     onClick={() => startGame('time_limit')}
                 />
                 <ModeCard
-                    mode="lives"
                     icon={<Heart size={32} />}
                     title="Survival"
                     description="High stakes. Limited lives. Mismatches are penalized. Survive to the end."

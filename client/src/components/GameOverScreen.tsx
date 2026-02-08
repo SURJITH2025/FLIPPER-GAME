@@ -1,10 +1,10 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
-import { RefreshCw, Menu, Share2 } from 'lucide-react';
+import { RefreshCw, Menu } from 'lucide-react';
 
 const GameOverScreen: React.FC = () => {
-    const { gameStatus, score, level, mode, restartLevel, quitGame } = useGame();
+    const { gameStatus, score, level, restartLevel, quitGame } = useGame();
 
     if (gameStatus !== 'won' && gameStatus !== 'lost') return null;
 
