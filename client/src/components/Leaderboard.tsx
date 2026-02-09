@@ -35,14 +35,26 @@ const Leaderboard: React.FC<{ initialMode?: GameMode }> = ({ initialMode = 'clas
                 `)
                 .eq('mode', currentMode)
                 .order('score', { ascending: false })
-                .limit(10);
+                .limit(1000); // Fetch more to allow for filtering duplicates
 
             if (error) {
                 // Mock data if table doesn't exist or error
                 console.warn("Error fetching scores, using mock data:", error.message);
                 setScores(getMockScores(currentMode));
             } else {
-                setScores(data || []);
+                // Filter to keep only the highest score per user
+                const uniqueScoresMap = new Map<string, ScoreEntry>();
+
+                (data || []).forEach((score: any) => {
+                    const username = score.profiles?.username || score.username;
+                    // Since we ordered by score DESC, the first time we see a user, it's their highest score
+                    if (username && !uniqueScoresMap.has(username)) {
+                        uniqueScoresMap.set(username, score);
+                    }
+                });
+
+                const uniqueScores = Array.from(uniqueScoresMap.values());
+                setScores(uniqueScores);
             }
         } catch (e) {
             setScores(getMockScores(currentMode));
