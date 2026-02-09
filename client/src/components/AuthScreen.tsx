@@ -32,7 +32,7 @@ const AuthScreen: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] w-full max-w-md mx-auto p-4">
+        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

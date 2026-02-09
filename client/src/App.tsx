@@ -68,13 +68,13 @@ const GameContainer: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="w-full h-screen flex items-center justify-center p-4">
+      <div className="w-full min-h-screen flex flex-col p-4 py-8 bg-dark-bg">
         <motion.div
           key="auth"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md m-auto"
         >
           <AuthScreen />
         </motion.div>

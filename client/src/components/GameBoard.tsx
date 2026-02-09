@@ -13,18 +13,15 @@ const GameBoard: React.FC = () => {
         else if (level >= 3 && level < 7) cols = 5;
         else cols = 6;
 
-        // Adjust for mobile vs desktop if needed, but grid-cols is robust
-        // We'll use inline styles for strict column count
         return (
             <div
-                className="grid gap-4 place-items-center mx-auto"
+                className="grid gap-2 md:gap-4 place-items-center mx-auto w-full max-w-[90vw] md:max-w-4xl"
                 style={{
-                    gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                    width: 'fit-content'
+                    gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`
                 }}
             >
                 {cards.map((card) => (
-                    <div key={card.id} className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28">
+                    <div key={card.id} className="w-full aspect-square">
                         <Card card={card} onClick={flipCard} />
                     </div>
                 ))}
@@ -33,7 +30,7 @@ const GameBoard: React.FC = () => {
     };
 
     return (
-        <div className="w-full flex justify-center items-center">
+        <div className="w-full h-full flex justify-center items-center p-2 md:p-4 overflow-y-auto">
             {renderGrid()}
         </div>
     );

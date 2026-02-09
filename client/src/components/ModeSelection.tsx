@@ -59,9 +59,9 @@ const ModeSelection: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] w-full max-w-5xl mx-auto p-4 relative">
 
-            <div className="relative z-10 w-full max-w-4xl p-8">
-                <div className="flex justify-between items-center mb-12">
-                    <h1 className="text-5xl md:text-7xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
+            <div className="relative z-10 w-full max-w-4xl p-4 md:p-8">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-8 md:mb-12 gap-4">
+                    <h1 className="text-4xl md:text-7xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink drop-shadow-[0_0_15px_rgba(0,243,255,0.5)] text-center md:text-left">
                         MEMORY_FLIP
                     </h1>
                     <div className="flex gap-2">
@@ -91,7 +91,7 @@ const ModeSelection: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full mb-8 md:mb-12">
                     <ModeCard
                         icon={<Brain size={32} />}
                         title="Classic"
