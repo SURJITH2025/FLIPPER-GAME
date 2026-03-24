@@ -39,13 +39,13 @@ const LeaderboardModal = ({ isOpen, onClose }) => {
             const uniqueScoresMap = new Map();
             (data || []).forEach(score => {
                 const existing = uniqueScoresMap.get(score.username);
-                if (!existing || score.total_score > existing.total_score) {
+                if (!existing || Number(score.total_score) > Number(existing.total_score)) {
                     uniqueScoresMap.set(score.username, score);
                 }
             });
 
             const sortedUniqueScores = Array.from(uniqueScoresMap.values())
-                .sort((a, b) => b.total_score - a.total_score);
+                .sort((a, b) => Number(b.total_score) - Number(a.total_score));
 
             setScores(sortedUniqueScores);
         } catch (err) {
