@@ -75,60 +75,21 @@ function App() {
     if (!user) return;
 
     try {
-      // Check for existing score for this mode/user
-      const { data: existingScores, error: fetchError } = await supabase
-        .from('scores')
-        .select('*')
-        .eq('username', user.username)
-        .eq('mode', scoreData.mode)
-        .order('total_score', { ascending: false });
+      // Unconditionally insert every new score as the leaderboard now handles deduplication
+      const { error: insertError } = await supabase.from('scores').insert([{
+        username: user.username,
+        moves: scoreData.moves,
+        time: scoreData.time,
+        level: scoreData.level,
+        mode: scoreData.mode,
+        total_score: scoreData.totalScore,
+        timestamp: Date.now()
+      }]);
 
-      if (fetchError) {
-        console.error("Error fetching existing scores:", fetchError);
-        return;
-      }
-
-      const existingScore = existingScores && existingScores.length > 0 ? existingScores[0] : null;
-
-      if (existingScore) {
-        // Update only if new score is higher
-        if (scoreData.totalScore > existingScore.total_score) {
-          const { error: updateError } = await supabase
-            .from('scores')
-            .update({
-              moves: scoreData.moves,
-              time: scoreData.time,
-              level: scoreData.level,
-              total_score: scoreData.totalScore,
-              timestamp: Date.now()
-            })
-            .eq('id', existingScore.id);
-
-          if (updateError) {
-            console.error("Error updating score:", updateError);
-          } else {
-            console.log("New high score updated!");
-          }
-        } else {
-          console.log("Existing score is higher or equal. No update.");
-        }
+      if (insertError) {
+        console.error("Error inserting score:", insertError);
       } else {
-        // Insert new score
-        const { error: insertError } = await supabase.from('scores').insert([{
-          username: user.username,
-          moves: scoreData.moves,
-          time: scoreData.time,
-          level: scoreData.level,
-          mode: scoreData.mode,
-          total_score: scoreData.totalScore,
-          timestamp: Date.now()
-        }]);
-
-        if (insertError) {
-          console.error("Error inserting score:", insertError);
-        } else {
-          console.log("First score for this mode inserted!");
-        }
+        console.log("Score inserted successfully!");
       }
     } catch (err) {
       console.error("Score submit error", err);
