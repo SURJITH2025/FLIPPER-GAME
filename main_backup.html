@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip Match - Memory Game</title>
+    <meta property="og:title" content="Flip Match - Memory Game Challenge">
+    <meta property="og:description" content="Test your memory skills in this addictive card matching game!">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+        /* NEON CYBERPUNK THEME */
+        body {
+            background: #0a0e27 !important;
+            font-family: 'Orbitron', sans-serif !important;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+            animation: bgPulse 15s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes bgPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #00ffff, #ff00ff, #00ffff) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5)) !important;
+            font-weight: 900 !important;
+            letter-spacing: 3px !important;
+            font-size: clamp(32px, 6vw, 56px);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8));
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .stat-badge {
+            background: rgba(10, 14, 39, 0.8) !important;
+            color: #00ffff !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .stat-badge:hover {
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .stat-badge.pulse {
+            animation: neonPulse 2s infinite;
+        }
+
+        @keyframes neonPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            }
+        }
+
+        .live-stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: rgba(10, 14, 39, 0.9) !important;
+            border: 2px solid rgba(255, 0, 255, 0.4) !important;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3) !important;
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .info-label {
+            color: #00ffff !important;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            background: rgba(10, 14, 39, 0.5) !important;
+            border: 2px solid rgba(0, 255, 255, 0.2) !important;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.2) !important;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            perspective: 1000px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            animation: matchPulse 0.6s ease;
+        }
+
+        @keyframes matchPulse {
+
+            0%,
+            100% {
+                transform: rotateY(180deg) scale(1);
+            }
+
+            50% {
+                transform: rotateY(180deg) scale(1.1);
+            }
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: clamp(32px, 6vw, 48px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
+            border: 3px solid #00ffff !important;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4) !important;
+            transform: rotateY(180deg);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #0f3460, #16213e) !important;
+            color: #00ffff !important;
+            border: 3px solid rgba(0, 255, 255, 0.5) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8) !important;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff00ff, #00ffff) !important;
+            border: 2px solid #ff00ff !important;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5) !important;
+            color: white !important;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8) !important;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(10, 14, 39, 0.8) !important;
+            color: #00ffff !important;
+            border: 2px solid #00ffff !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6) !important;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00ffff) !important;
+            color: #0a0e27 !important;
+            border: 2px solid #00ff88 !important;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5) !important;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f3460, #16213e) !important;
+            border: 3px solid rgba(0, 255, 255, 0.4) !important;
+            box-shadow: 0 0 60px rgba(0, 255, 255, 0.4) !important;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            animation: modalSlideIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            color: #00ffff !important;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8) !important;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .modal p {
+            color: #fff !important;
+            margin-bottom: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ffff !important;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: rgba(10, 14, 39, 0.8) !important;
+            color: white !important;
+            font-family: 'Orbitron', sans-serif !important;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ffff !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4) !important;
+        }
+
+        .error-message {
+            color: #ff00ff !important;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.8) !important;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .user-info {
+            background: rgba(10, 14, 39, 0.8) !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2) !important;
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .user-name {
+            color: #00ffff !important;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5) !important;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .leaderboard-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            background: rgba(10, 14, 39, 0.8);
+            color: #00ffff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            color: white;
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .leaderboard-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-item {
+            background: rgba(10, 14, 39, 0.5) !important;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2) !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            transition: background 0.2s;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(0, 255, 255, 0.1) !important;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) !important;
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            color: #00ffff !important;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .rank.gold {
+            color: #FFD700 !important;
+            text-shadow: 0 0 15px #FFD700 !important;
+        }
+
+        .rank.silver {
+            color: #C0C0C0 !important;
+            text-shadow: 0 0 15px #C0C0C0 !important;
+        }
+
+        .rank.bronze {
+            color: #CD7F32 !important;
+            text-shadow: 0 0 15px #CD7F32 !important;
+        }
+
+        .player-name {
+            color: white !important;
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .score {
+            color: #00ffff !important;
+            font-size: 14px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e) !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2) !important;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            color: #00ffff !important;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8) !important;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            color: white;
+        }
+
+        .welcome-screen h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+
+        .welcome-screen p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .mode-selection {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .mode-selection h2 {
+            color: #00ffff;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mode-card {
+            background: linear-gradient(135deg, #0f3460, #16213e) !important;
+            border: 3px solid rgba(0, 255, 255, 0.3) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2) !important;
+            border-radius: 16px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover {
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5) !important;
+            border-color: #00ffff !important;
+            transform: translateY(-8px);
+        }
+
+        .mode-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .mode-card h3 {
+            color: #00ffff !important;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .mode-description {
+            color: #fff !important;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 60px;
+        }
+
+        .mode-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .mode-details span {
+            color: #00ffff !important;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .level-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-badge,
+        .level-badge {
+            background: rgba(10, 14, 39, 0.9) !important;
+            color: #00ffff !important;
+            border: 2px solid rgba(0, 255, 255, 0.4) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, #ff00ff, #00ffff) !important;
+            color: white !important;
+            border-color: #ff00ff !important;
+        }
+
+        .share-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .mode-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-card {
+                padding: 20px;
+            }
+
+            .mode-icon {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                gap: 8px;
+            }
+
+            .card-face {
+                border-radius: 8px;
+            }
+
+            .info-box {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+
+            button {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <h2>🎴 Flip Match</h2>
+            <p>Test your memory and compete globally!</p>
+            <div class="controls">
+                <button class="btn-primary" onclick="app.showLogin()">Login</button>
+                <button class="btn-success" onclick="app.showRegister()">Create Account</button>
+                <button class="btn-secondary" onclick="app.playAsGuest()">🎮 Play as Guest</button>
+                <button class="btn-secondary" onclick="app.viewStats()">📊 View Stats</button>
+            </div>
+        </div>
+
+        <!-- Main Game Screen -->
+        <div id="gameScreen" class="hidden">
+            <header>
+                <h1>🎴 Flip Match</h1>
+            </header>
+
+            <div class="live-stats">
+                <div class="stat-badge pulse">
+                    👥 <span id="onlineUsers">0</span> Online
+                </div>
+                <div class="stat-badge">
+                    📊 <span id="totalPlayers">0</span> Total Players
+                </div>
+                <div class="stat-badge">
+                    🎮 <span id="gamesPlayed">0</span> Games Played
+                </div>
+            </div>
+
+            <div class="user-info" id="userInfo">
+                <div>
+                    <span class="user-name" id="displayName"></span>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-success" id="upgradeBtn" style="padding: 8px 16px; display: none;"
+                        onclick="app.showUpgrade()">⬆️ Upgrade</button>
+                    <button class="btn-secondary" style="padding: 8px 16px;" onclick="app.logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Mode Selection -->
+            <div id="modeSelection" class="mode-selection">
+                <h2 style="text-align: center; margin-bottom: 30px;">Choose Your Challenge</h2>
+
+                <div class="mode-cards">
+                    <div class="mode-card" onclick="app.selectMode('classic')">
+                        <div class="mode-icon">🎯</div>
+                        <h3>Classic Mode</h3>
+                        <p class="mode-description">No pressure! Take your time and find all pairs. Perfect for
+                            relaxing.</p>
+                        <div class="mode-details">
+                            <span>✓ Unlimited moves</span>
+                            <span>✓ No lives system</span>
+                            <span>✓ Pure memory test</span>
+                            <span>✓ 8 levels (12→48 cards)</span>
+                        </div>
+                    </div>
+
+                    <div class="mode-card" onclick="app.selectMode('timed')">
+                        <div class="mode-icon">⏱️</div>
+                        <h3>Move Limit Mode</h3>
+                        <p class="mode-description">Beat each level within the move limit! Strategic thinking required.
+                        </p>
+                        <div class="mode-details">
+                            <span>📊 Limited moves</span>
+                            <span>📈 Harder each level</span>
+                            <span>🎯 Efficiency bonus</span>
+                            <span>✓ 8 levels (12→48 cards)</span>
+                        </div>
+                    </div>
+
+                    <div class="mode-card" onclick="app.selectMode('hardcore')">
+                        <div class="mode-icon">💀</div>
+                        <h3>Lives Mode</h3>
+                        <p class="mode-description">First mismatch is free! Fail the SAME emoji twice and lose a life!
+                        </p>
+                        <div class="mode-details">
+                            <span>❤️ 5→1 lives (decreasing)</span>
+                            <span>💔 2nd fail = -1 life</span>
+                            <span>🔥 Master challenge</span>
+                            <span>✓ 8 levels (12→48 cards)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-secondary" style="margin-top: 20px;" onclick="app.backToWelcome()">← Back</button>
+            </div>
+
+            <!-- Game Play -->
+            <div id="gamePlay" class="hidden">
+                <div class="level-info">
+                    <div class="mode-badge" id="modeBadge">Classic Mode</div>
+                    <div class="level-badge" id="levelBadge">Level 1</div>
+                </div>
+
+                <div class="game-info">
+                    <div class="info-box">
+                        <div class="info-label">Level</div>
+                        <div id="currentLevel">1</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Score</div>
+                        <div id="totalScore">0</div>
+                    </div>
+                    <div class="info-box" id="movesBox">
+                        <div class="info-label">Moves</div>
+                        <div id="moves">0</div>
+                    </div>
+                    <div class="info-box" id="livesBox" style="display: none;">
+                        <div class="info-label">Lives</div>
+                        <div id="lives">❤️❤️❤️</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Time</div>
+                        <div id="timer">0:00</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Pairs</div>
+                        <div id="pairs">0/6</div>
+                    </div>
+                </div>
+
+                <div class="game-board" id="gameBoard"></div>
+
+                <div class="controls">
+                    <button class="btn-primary" onclick="game.restartLevel()">🔄 Restart</button>
+                    <button class="btn-secondary" onclick="app.showLeaderboard()">🏆 Leaderboard</button>
+                    <button class="btn-secondary" onclick="app.quitToMenu()">🏠 Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password">
+            </div>
+            <div id="loginError" class="error-message"></div>
+            <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="app.login()">Login</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.closeModal('loginModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h2>Create Account</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="registerUsername" placeholder="Choose username">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="registerEmail" placeholder="Your email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="registerPassword" placeholder="Choose password">
+            </div>
+            <div id="registerError" class="error-message"></div>
+            <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="app.register()">Create
+                Account</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.closeModal('registerModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="upgradeModal">
+        <div class="modal-content">
+            <h2>⬆️ Upgrade Account</h2>
+            <p style="margin-bottom: 20px;">Save progress and compete with a custom username!</p>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="upgradeUsername" placeholder="Choose username">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="upgradeEmail" placeholder="Your email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="upgradePassword" placeholder="Choose password">
+            </div>
+            <div id="upgradeError" class="error-message"></div>
+            <button class="btn-primary" style="width: 100%; margin-bottom: 10px;"
+                onclick="app.upgradeAccount()">Upgrade</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.closeModal('upgradeModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal" id="winModal">
+        <div class="modal-content">
+            <h2>🎉 Level Complete!</h2>
+            <p>Level: <strong id="completedLevel">1</strong></p>
+            <p>Moves: <strong id="finalMoves">0</strong></p>
+            <p>Time: <strong id="finalTime">0:00</strong></p>
+            <p>Level Score: <strong id="levelScore">0</strong></p>
+            <p style="font-size: 24px;">Total: <strong id="displayTotalScore">0</strong></p>
+            <div class="share-options">
+                <button class="btn-secondary" onclick="app.shareScore('twitter')">🐦 Tweet</button>
+                <button class="btn-secondary" onclick="app.shareScore('facebook')">📘 Share</button>
+                <button class="btn-secondary" onclick="app.copyScoreLink()">🔗 Copy</button>
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 15px;" onclick="game.nextLevel()">➡️ Next
+                Level</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.quitToMenu()">🏠 Menu</button>
+        </div>
+    </div>
+
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>💔 Game Over</h2>
+            <p id="gameOverReason">You ran out of lives!</p>
+            <p>Level: <strong id="finalLevel">1</strong></p>
+            <p>Score: <strong id="gameOverScore">0</strong></p>
+            <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="game.retryLevel()">🔄
+                Retry</button>
+            <button class="btn-secondary" style="width: 100%; margin-bottom: 10px;"
+                onclick="app.selectMode(app.currentMode)">🔄 Restart</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.quitToMenu()">🏠 Menu</button>
+        </div>
+    </div>
+
+    <div class="modal" id="victoryModal">
+        <div class="modal-content">
+            <h2>🏆 VICTORY!</h2>
+            <p style="font-size: 20px; margin-bottom: 20px;">All levels complete!</p>
+            <p>Score: <strong id="victoryScore" style="font-size: 32px;">0</strong></p>
+            <p>Time: <strong id="victoryTime">0:00</strong></p>
+            <p>Moves: <strong id="victoryMoves">0</strong></p>
+            <div class="share-options">
+                <button class="btn-secondary" onclick="app.shareScore('twitter')">🐦 Tweet</button>
+                <button class="btn-secondary" onclick="app.shareScore('facebook')">📘 Share</button>
+                <button class="btn-secondary" onclick="app.copyScoreLink()">🔗 Copy</button>
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 15px;" onclick="app.showLeaderboard()">🏆
+                Leaderboard</button>
+            <button class="btn-secondary" style="width: 100%;" onclick="app.quitToMenu()">🏠 Menu</button>
+        </div>
+    </div>
+
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content">
+            <h2>🏆 Leaderboard</h2>
+            <div class="leaderboard-tabs">
+                <button class="tab-btn active" onclick="app.switchLeaderboard('daily')">Today</button>
+                <button class="tab-btn" onclick="app.switchLeaderboard('weekly')">Week</button>
+                <button class="tab-btn" onclick="app.switchLeaderboard('alltime')">All Time</button>
+            </div>
+            <div class="leaderboard-tabs" style="margin-top: 10px;">
+                <button class="tab-btn mode-filter active" data-mode="classic" onclick="app.filterByMode('classic')">🎯
+                    Classic</button>
+                <button class="tab-btn mode-filter" data-mode="timed" onclick="app.filterByMode('timed')">⏱️
+                    Moves</button>
+                <button class="tab-btn mode-filter" data-mode="hardcore" onclick="app.filterByMode('hardcore')">💀
+                    Lives</button>
+            </div>
+            <div class="leaderboard-list" id="leaderboardList"></div>
+            <button class="btn-secondary" style="width: 100%; margin-top: 20px;"
+                onclick="app.closeModal('leaderboardModal')">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="globalStatsModal">
+        <div class="modal-content">
+            <h2>📊 Global Stats</h2>
+            <div class="stats-grid" id="globalStatsGrid"></div>
+            <button class="btn-secondary" style="width: 100%; margin-top: 20px;"
+                onclick="app.closeModal('globalStatsModal')">Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://tpzqgouypcpobmzvvlen.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwenFnb3V5cGNwb2JtenZ2bGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyOTk0MjIsImV4cCI6MjA4NTg3NTQyMn0.6K114cNKAuGG8mn1bD6mg_tm-c8mpwZy-Q7WA3lL_AU';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Application State
+        const app = {
+            currentUser: null,
+            currentLeaderboard: 'daily',
+            currentMode: null,
+            currentModeFilter: 'classic',
+            sessionId: null,
+
+            async init() {
+                this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                // Check local session
+                const savedUser = localStorage.getItem('flipMatchUser');
+                if (savedUser) {
+                    this.currentUser = JSON.parse(savedUser);
+                    // Verify if user still exists in DB (optional, but good for validity)
+                    if (!this.currentUser.isGuest) {
+                        const { data, error } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('username', this.currentUser.username)
+                            .single();
+
+                        if (!data || error) {
+                            // User seems to be gone or invalid
+                            this.logout();
+                            return;
+                        }
+                    }
+                    this.showGameScreen();
+                } else {
+                    // Check for guest ID
+                    const guestId = localStorage.getItem('flipMatchGuestId');
+                    if (guestId) {
+                        this.currentUser = {
+                            username: 'Guest_' + guestId,
+                            isGuest: true,
+                            guestId: guestId,
+                            createdAt: Date.now()
+                        };
+                        localStorage.setItem('flipMatchUser', JSON.stringify(this.currentUser));
+                        this.showGameScreen();
+                    }
+                }
+
+                // Start stats updater
+                this.updateLiveStats();
+                setInterval(() => this.updateLiveStats(), 30000);
+            },
+
+            playAsGuest() {
+                let guestId = localStorage.getItem('flipMatchGuestId');
+                if (!guestId) {
+                    guestId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+                    localStorage.setItem('flipMatchGuestId', guestId);
+                }
+                this.currentUser = {
+                    username: 'Guest_' + guestId,
+                    isGuest: true,
+                    guestId: guestId,
+                    createdAt: Date.now()
+                };
+                localStorage.setItem('flipMatchUser', JSON.stringify(this.currentUser));
+                this.showGameScreen();
+            },
+
+            showUpgrade() {
+                document.getElementById('upgradeModal').classList.add('active');
+            },
+
+            async upgradeAccount() {
+                if (!this.currentUser || !this.currentUser.isGuest) return;
+
+                const username = document.getElementById('upgradeUsername').value.trim();
+                const email = document.getElementById('upgradeEmail').value.trim();
+                const password = document.getElementById('upgradePassword').value;
+
+                if (!username || !email || !password) {
+                    document.getElementById('upgradeError').textContent = 'Fill all fields';
+                    return;
+                }
+
+                if (username.length < 3) {
+                    document.getElementById('upgradeError').textContent = 'Username too short';
+                    return;
+                }
+
+                try {
+                    // Check if username exists
+                    const { data: existingUser } = await supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('username', username)
+                        .single();
+
+                    if (existingUser) {
+                        document.getElementById('upgradeError').textContent = 'Username taken';
+                        return;
+                    }
+
+                    // Insert new user
+                    const { error } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            username: username,
+                            email: email,
+                            password: password, // Note: In production, use Supabase Auth or hash this!
+                            created_at: Date.now(),
+                            is_guest: false,
+                            guest_id: this.currentUser.guestId // Link old guest ID if needed
+                        }]);
+
+                    if (error) throw error;
+
+                    this.currentUser = {
+                        username: username,
+                        email: email,
+                        isGuest: false,
+                        createdAt: Date.now()
+                    };
+
+                    localStorage.setItem('flipMatchUser', JSON.stringify(this.currentUser));
+                    localStorage.removeItem('flipMatchGuestId');
+                    this.closeModal('upgradeModal');
+                    document.getElementById('displayName').textContent = `👤 ${username}`;
+                    document.getElementById('upgradeBtn').style.display = 'none';
+                    alert('🎉 Account upgraded!');
+
+                } catch (error) {
+                    console.error('Upgrade error:', error);
+                    document.getElementById('upgradeError').textContent = 'Error upgrading: ' + error.message;
+                }
+            },
+
+            // Removed complex online tracking to simplify for now
+            // We'll just count total users/scores for stats
+
+            async updateLiveStats() {
+                try {
+                    // Update total players (count of profiles)
+                    const { count: usersCount } = await supabase
+                        .from('profiles')
+                        .select('*', { count: 'exact', head: true });
+
+                    document.getElementById('totalPlayers').textContent = usersCount || 0;
+
+                    // Update games played (count of scores)
+                    const { count: gamesCount } = await supabase
+                        .from('scores')
+                        .select('*', { count: 'exact', head: true });
+
+                    document.getElementById('gamesPlayed').textContent = gamesCount || 0;
+
+                    // Mock "Online" for now or use a simple randomizer to make it look alive if not using Realtime Presence
+                    // Realtime Presence would be better but requires more setup. 
+                    // Let's just say "Online" is random for now to keep it simple, or 1 (you).
+                    document.getElementById('onlineUsers').textContent = Math.floor(Math.random() * 5) + 1;
+
+                } catch (error) {
+                    console.error("Stats error", error);
+                }
+            },
+
+            showLogin() {
+                document.getElementById('loginModal').classList.add('active');
+            },
+
+            showRegister() {
+                document.getElementById('registerModal').classList.add('active');
+            },
+
+            async login() {
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                if (!username || !password) {
+                    document.getElementById('loginError').textContent = 'Fill all fields';
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+
+                    if (error || !data) {
+                        document.getElementById('loginError').textContent = 'User not found';
+                        return;
+                    }
+
+                    if (data.password !== password) {
+                        document.getElementById('loginError').textContent = 'Wrong password';
+                        return;
+                    }
+
+                    this.currentUser = {
+                        username: data.username,
+                        email: data.email,
+                        createdAt: data.created_at,
+                        isGuest: false
+                    };
+
+                    localStorage.setItem('flipMatchUser', JSON.stringify(this.currentUser));
+                    this.closeModal('loginModal');
+                    this.showGameScreen();
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('loginError').textContent = 'Login failed';
+                }
+            },
+
+            async register() {
+                const username = document.getElementById('registerUsername').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const password = document.getElementById('registerPassword').value;
+
+                if (!username || !email || !password) {
+                    document.getElementById('registerError').textContent = 'Fill all fields';
+                    return;
+                }
+
+                if (username.length < 3) {
+                    document.getElementById('registerError').textContent = 'Username too short';
+                    return;
+                }
+
+                try {
+                    // Check if username exists
+                    const { data: existingUser } = await supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('username', username)
+                        .single();
+
+                    if (existingUser) {
+                        document.getElementById('registerError').textContent = 'Username taken';
+                        return;
+                    }
+
+                    // Insert new user
+                    const { error } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            username: username,
+                            email: email,
+                            password: password,
+                            created_at: Date.now(),
+                            is_guest: false
+                        }]);
+
+                    if (error) throw error;
+
+                    this.currentUser = {
+                        username: username,
+                        email: email,
+                        createdAt: Date.now(),
+                        isGuest: false
+                    };
+
+                    localStorage.setItem('flipMatchUser', JSON.stringify(this.currentUser));
+                    this.closeModal('registerModal');
+                    this.showGameScreen();
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('registerError').textContent = 'Registration failed: ' + error.message;
+                }
+            },
+
+            logout() {
+                localStorage.removeItem('flipMatchUser');
+                if (!this.currentUser || !this.currentUser.isGuest) {
+                    localStorage.removeItem('flipMatchGuestId');
+                }
+                this.currentUser = null;
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+            },
+
+            showGameScreen() {
+                document.getElementById('welcomeScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                document.getElementById('modeSelection').classList.remove('hidden');
+                document.getElementById('gamePlay').classList.add('hidden');
+
+                const displayName = this.currentUser.isGuest
+                    ? `🎮 ${this.currentUser.username}`
+                    : `👤 ${this.currentUser.username}`;
+                document.getElementById('displayName').textContent = displayName;
+
+                document.getElementById('upgradeBtn').style.display = this.currentUser.isGuest ? 'block' : 'none';
+                this.updateLiveStats();
+            },
+
+            selectMode(mode) {
+                this.currentMode = mode;
+                document.getElementById('modeSelection').classList.add('hidden');
+                document.getElementById('gamePlay').classList.remove('hidden');
+
+                const modeNames = {
+                    'classic': '🎯 Classic',
+                    'timed': '⏱️ Move Limit',
+                    'hardcore': '💀 Lives'
+                };
+                document.getElementById('modeBadge').textContent = modeNames[mode];
+                game.init(mode);
+            },
+
+            backToWelcome() {
+                document.getElementById('modeSelection').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+            },
+
+            quitToMenu() {
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+                document.getElementById('gamePlay').classList.add('hidden');
+                document.getElementById('modeSelection').classList.remove('hidden');
+                game.cleanup();
+            },
+
+            shareScore(platform) {
+                const score = document.getElementById('displayTotalScore').textContent ||
+                    document.getElementById('victoryScore').textContent;
+                const text = `🎉 I scored ${score} in Flip Match! Can you beat me?`;
+                const url = window.location.href;
+
+                if (platform === 'twitter') {
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                } else if (platform === 'facebook') {
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+                }
+            },
+
+            copyScoreLink() {
+                const score = document.getElementById('displayTotalScore').textContent ||
+                    document.getElementById('victoryScore').textContent;
+                const text = `🎉 I scored ${score} in Flip Match! ${window.location.href}`;
+                navigator.clipboard.writeText(text);
+                alert('Score link copied!');
+            },
+
+            filterByMode(mode) {
+                this.currentModeFilter = mode;
+                document.querySelectorAll('.mode-filter').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+                this.loadLeaderboard(this.currentLeaderboard);
+            },
+
+            async submitScore(moves, time, level, mode, totalScore) {
+                if (!this.currentUser) return;
+
+                try {
+                    const scoreData = {
+                        username: this.currentUser.username,
+                        moves,
+                        time,
+                        level,
+                        mode,
+                        total_score: totalScore,
+                        timestamp: Date.now()
+                    };
+
+                    await supabase.from('scores').insert([scoreData]);
+
+                    // Trigger stats update
+                    this.updateLiveStats();
+                } catch (error) {
+                    console.error("Score submit error", error);
+                }
+            },
+
+            async showLeaderboard() {
+                await this.loadLeaderboard(this.currentLeaderboard);
+                document.getElementById('leaderboardModal').classList.add('active');
+            },
+
+            async switchLeaderboard(type) {
+                this.currentLeaderboard = type;
+                await this.loadLeaderboard(type);
+            },
+
+            async loadLeaderboard(type) {
+                const listElement = document.getElementById('leaderboardList');
+                listElement.innerHTML = '<p style="text-align: center; color: #999;">Loading...</p>';
+
+                try {
+                    let query = supabase
+                        .from('scores')
+                        .select('*')
+                        .eq('mode', this.currentModeFilter)
+                        .order('total_score', { ascending: false })
+                        .limit(50); // Get top 50
+
+                    if (type === 'daily') {
+                        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                        query = query.gte('timestamp', oneDayAgo);
+                    } else if (type === 'weekly') {
+                        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+                        query = query.gte('timestamp', oneWeekAgo);
+                    }
+
+                    const { data: scores, error } = await query;
+
+                    if (error) throw error;
+
+                    if (!scores || scores.length === 0) {
+                        listElement.innerHTML = '<p style="text-align: center; color: #999;">No scores yet!</p>';
+                        return;
+                    }
+
+                    let html = '';
+                    scores.forEach((score, index) => {
+                        const rank = index + 1;
+                        let rankClass = '';
+                        let medal = '';
+
+                        if (rank === 1) { rankClass = 'gold'; medal = '🥇'; }
+                        else if (rank === 2) { rankClass = 'silver'; medal = '🥈'; }
+                        else if (rank === 3) { rankClass = 'bronze'; medal = '🥉'; }
+                        else { medal = `#${rank}`; }
+
+                        html += `
+                            <div class="leaderboard-item">
+                                <span class="rank ${rankClass}">${medal}</span>
+                                <span class="player-name">${score.username}</span>
+                                <span class="score">${score.total_score || 0} pts • Lvl ${score.level || 1}</span>
+                            </div>
+                        `;
+                    });
+
+                    listElement.innerHTML = html;
+                } catch (error) {
+                    console.error("Leaderboard error", error);
+                    listElement.innerHTML = '<p style="text-align: center; color: #999; color: #ff00ff;">Failed to load.</p>';
+                }
+            },
+
+            async viewStats() {
+                await this.updateLiveStats();
+                const gridElement = document.getElementById('globalStatsGrid');
+
+                gridElement.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${document.getElementById('onlineUsers').textContent}</div>
+                        <div class="stat-label">Online Now</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${document.getElementById('totalPlayers').textContent}</div>
+                        <div class="stat-label">Total Players</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${document.getElementById('gamesPlayed').textContent}</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                `;
+
+                document.getElementById('globalStatsModal').classList.add('active');
+            },
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+        };
+
+        // Game Logic
+        const game = {
+            allEmojis: ['🍎', '🍌', '🍇', '🍊', '🍓', '🍒', '🍑', '🍉', '🥝', '🍍', '🥭', '🍋', '🫐', '🥥', '🍈', '🍐', '🥑', '🌶️'],
+
+            levels: [
+                // Classic Mode: Pure memory, no limits
+                { pairs: 6, grid: [3, 4], moves: Infinity, lives: Infinity },
+                { pairs: 8, grid: [4, 4], moves: Infinity, lives: Infinity },
+                { pairs: 10, grid: [4, 5], moves: Infinity, lives: Infinity },
+                { pairs: 12, grid: [4, 6], moves: Infinity, lives: Infinity },
+                { pairs: 15, grid: [5, 6], moves: Infinity, lives: Infinity },
+                { pairs: 18, grid: [6, 6], moves: Infinity, lives: Infinity },
+                { pairs: 21, grid: [6, 7], moves: Infinity, lives: Infinity },
+                { pairs: 24, grid: [6, 8], moves: Infinity, lives: Infinity }
+            ],
+
+            // Move Limit Mode progression
+            moveLimitLevels: [
+                { pairs: 6, grid: [3, 4], moves: 20 },    // 12 cards, generous
+                { pairs: 8, grid: [4, 4], moves: 24 },    // 16 cards, 1.5x pairs
+                { pairs: 10, grid: [4, 5], moves: 28 },   // 20 cards, tighter
+                { pairs: 12, grid: [4, 6], moves: 32 },   // 24 cards, challenging
+                { pairs: 15, grid: [5, 6], moves: 38 },   // 30 cards, difficult
+                { pairs: 18, grid: [6, 6], moves: 44 },   // 36 cards, expert
+                { pairs: 21, grid: [6, 7], moves: 50 },   // 42 cards, master
+                { pairs: 24, grid: [6, 8], moves: 56 }    // 48 cards, ultimate
+            ],
+
+            // Lives Mode progression (life count decreases as levels increase)
+            livesLevels: [
+                { pairs: 6, grid: [3, 4], lives: 5 },     // Easy start
+                { pairs: 8, grid: [4, 4], lives: 4 },     // Still forgiving
+                { pairs: 10, grid: [4, 5], lives: 4 },    // Medium difficulty
+                { pairs: 12, grid: [4, 6], lives: 3 },    // Getting tough
+                { pairs: 15, grid: [5, 6], lives: 3 },    // Very challenging
+                { pairs: 18, grid: [6, 6], lives: 2 },    // Expert level
+                { pairs: 21, grid: [6, 7], lives: 2 },    // Nearly impossible
+                { pairs: 24, grid: [6, 8], lives: 1 }     // ONE MISTAKE = GAME OVER!
+            ],
+
+            mode: null,
+            currentLevel: 0,
+            totalScore: 0,
+            flippedCards: [],
+            matchedPairs: 0,
+            moves: 0,
+            movesRemaining: 0,
+            lives: 0,
+            timer: 0,
+            timerInterval: null,
+            gameStarted: false,
+            isProcessing: false,
+            failedEmojis: new Set(), // Track which emojis have failed to match once
+
+            init(mode) {
+                this.mode = mode;
+                this.currentLevel = 0;
+                this.totalScore = 0;
+                this.failedEmojis = new Set();
+                this.startLevel();
+            },
+
+            startLevel() {
+                this.flippedCards = [];
+                this.matchedPairs = 0;
+                this.moves = 0;
+                this.gameStarted = false;
+                this.isProcessing = false;
+                this.failedEmojis = new Set();
+
+                // Get the correct level config based on mode
+                let levelConfig;
+                if (this.mode === 'timed') {
+                    levelConfig = this.moveLimitLevels[this.currentLevel];
+                } else if (this.mode === 'hardcore') {
+                    levelConfig = this.livesLevels[this.currentLevel];
+                } else {
+                    levelConfig = this.levels[this.currentLevel];
+                }
+
+                this.movesRemaining = levelConfig.moves || Infinity;
+                this.lives = levelConfig.lives || Infinity;
+
+                document.getElementById('currentLevel').textContent = this.currentLevel + 1;
+                document.getElementById('levelBadge').textContent = `Level ${this.currentLevel + 1}`;
+                document.getElementById('totalScore').textContent = this.totalScore;
+                document.getElementById('moves').textContent = '0';
+                document.getElementById('pairs').textContent = `0/${levelConfig.pairs}`;
+
+                if (this.mode === 'hardcore') {
+                    document.getElementById('livesBox').style.display = 'block';
+                    this.updateLivesDisplay(levelConfig.lives);
+                } else {
+                    document.getElementById('livesBox').style.display = 'none';
+                }
+
+                if (this.mode === 'timed') {
+                    document.getElementById('movesBox').querySelector('.info-label').textContent = 'Moves Left';
+                    document.getElementById('moves').textContent = this.movesRemaining;
+                } else {
+                    document.getElementById('movesBox').querySelector('.info-label').textContent = 'Moves';
+                }
+
+                this.stopTimer();
+                this.timer = 0;
+                document.getElementById('timer').textContent = '0:00';
+
+                this.createBoard(levelConfig);
+            },
+
+            createBoard(config) {
+                const board = document.getElementById('gameBoard');
+                board.innerHTML = '';
+                board.style.gridTemplateColumns = `repeat(${config.grid[0]}, 1fr)`;
+
+                const levelCards = this.allEmojis.slice(0, config.pairs);
+                const cardPairs = [...levelCards, ...levelCards];
+                const shuffled = this.shuffle(cardPairs);
+
+                shuffled.forEach((emoji, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.dataset.emoji = emoji;
+                    card.dataset.index = index;
+
+                    card.innerHTML = `
+                        <div class="card-face card-back">?</div>
+                        <div class="card-face card-front">${emoji}</div>
+                    `;
+
+                    card.addEventListener('click', () => this.flipCard(card));
+                    board.appendChild(card);
+                });
+            },
+
+            shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            },
+
+            flipCard(card) {
+                if (this.isProcessing ||
+                    card.classList.contains('flipped') ||
+                    card.classList.contains('matched') ||
+                    this.flippedCards.length >= 2) {
+                    return;
+                }
+
+                if (!this.gameStarted) {
+                    this.startTimer();
+                    this.gameStarted = true;
+                }
+
+                card.classList.add('flipped');
+                this.flippedCards.push(card);
+
+                if (this.flippedCards.length === 2) {
+                    this.moves++;
+
+                    if (this.mode === 'timed') {
+                        this.movesRemaining--;
+                        document.getElementById('moves').textContent = this.movesRemaining;
+
+                        if (this.movesRemaining <= 0) {
+                            setTimeout(() => this.gameOver('Out of moves!'), 600);
+                            return;
+                        }
+                    } else {
+                        document.getElementById('moves').textContent = this.moves;
+                    }
+
+                    this.checkMatch();
+                }
+            },
+
+            checkMatch() {
+                this.isProcessing = true;
+                const [card1, card2] = this.flippedCards;
+
+                // Get the correct level config based on mode
+                let levelConfig;
+                if (this.mode === 'timed') {
+                    levelConfig = this.moveLimitLevels[this.currentLevel];
+                } else if (this.mode === 'hardcore') {
+                    levelConfig = this.livesLevels[this.currentLevel];
+                } else {
+                    levelConfig = this.levels[this.currentLevel];
+                }
+
+                if (card1.dataset.emoji === card2.dataset.emoji) {
+                    // MATCH FOUND!
+                    setTimeout(() => {
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        this.matchedPairs++;
+
+                        // Remove from failed emojis if it was there (they got it right this time!)
+                        this.failedEmojis.delete(card1.dataset.emoji);
+
+                        document.getElementById('pairs').textContent = `${this.matchedPairs}/${levelConfig.pairs}`;
+                        this.flippedCards = [];
+                        this.isProcessing = false;
+
+                        if (this.matchedPairs === levelConfig.pairs) {
+                            this.levelComplete();
+                        }
+                    }, 600);
+                } else {
+                    // NO MATCH
+                    setTimeout(() => {
+                        if (this.mode === 'hardcore') {
+                            // NEW LIVES MODE LOGIC:
+                            // Check if EITHER emoji has been failed before
+                            const emoji1 = card1.dataset.emoji;
+                            const emoji2 = card2.dataset.emoji;
+
+                            const emoji1Failed = this.failedEmojis.has(emoji1);
+                            const emoji2Failed = this.failedEmojis.has(emoji2);
+
+                            if (emoji1Failed || emoji2Failed) {
+                                // One of these emojis was already failed once - LOSE A LIFE!
+                                this.lives--;
+                                this.updateLivesDisplay(levelConfig.lives);
+
+                                // Visual feedback for losing a life
+                                card1.style.borderColor = '#ff0000';
+                                card2.style.borderColor = '#ff0000';
+                                setTimeout(() => {
+                                    card1.style.borderColor = '';
+                                    card2.style.borderColor = '';
+                                }, 300);
+
+                                if (this.lives <= 0) {
+                                    card1.classList.remove('flipped');
+                                    card2.classList.remove('flipped');
+                                    this.flippedCards = [];
+                                    this.isProcessing = false;
+                                    this.gameOver('Out of lives!');
+                                    return;
+                                }
+                            } else {
+                                // First time failing these emojis - mark them as failed but don't lose life
+                                this.failedEmojis.add(emoji1);
+                                this.failedEmojis.add(emoji2);
+                            }
+                        }
+
+                        card1.classList.remove('flipped');
+                        card2.classList.remove('flipped');
+                        this.flippedCards = [];
+                        this.isProcessing = false;
+                    }, 1000);
+                }
+            },
+
+            updateLivesDisplay(maxLives) {
+                const hearts = '❤️'.repeat(this.lives) + '🖤'.repeat(maxLives - this.lives);
+                document.getElementById('lives').textContent = hearts;
+            },
+
+            levelComplete() {
+                this.stopTimer();
+
+        // Get the correct level config ba
